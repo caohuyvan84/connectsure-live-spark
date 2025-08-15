@@ -15,27 +15,32 @@ export const ConnectSureApp = () => {
   const location = useLocation();
 
   useEffect(() => {
+    console.log('Current path:', location.pathname);
+    
     // Determine user type from URL
     const path = location.pathname;
-    if (path.includes('/agent')) {
-      setUserType('agent');
-    } else {
-      setUserType('customer'); 
-    }
-
+    const urlUserType = path.includes('/agent') ? 'agent' : 'customer';
+    console.log('URL user type:', urlUserType);
+    
     // Check if user is already authenticated
     if (authService.isAuthenticated()) {
       const currentUser = authService.getCurrentUser();
+      console.log('Current authenticated user:', currentUser);
       if (currentUser) {
         setAppState('dashboard');
         setUserType(currentUser.role);
+        return; // Exit early to avoid setting URL-based userType
       }
     }
+    
+    // Only set URL-based userType if not authenticated
+    setUserType(urlUserType);
   }, [location]);
 
   const handleLogin = async (credentials: any) => {
     try {
       const user = await authService.login(credentials);
+      console.log('Login successful, user role:', user.role);
       setUserType(user.role);
       setAppState('dashboard');
     } catch (error) {
@@ -78,6 +83,7 @@ export const ConnectSureApp = () => {
   }
 
   // Show dashboard
+  console.log('Rendering dashboard for userType:', userType);
   if (userType === 'customer') {
     return (
       <CustomerDashboard 
@@ -85,7 +91,11 @@ export const ConnectSureApp = () => {
         onLogout={handleLogout}
       />
     );
-  } else {
+  } else if (userType === 'agent') {
     return <AgentDashboard onLogout={handleLogout} />;
+  } else {
+    // Fallback - should not happen
+    console.warn('Unknown userType:', userType);
+    return <div>Loading...</div>;
   }
 };
