@@ -9,11 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
-  onLogin: (userRole: 'customer' | 'agent') => void;
-  userType: 'customer' | 'agent';
+  onLogin: (credentials: { username: string; password: string }) => void;
+  initialUserType: 'customer' | 'agent';
 }
 
-export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
+export const LoginForm = ({ onLogin, initialUserType }: LoginFormProps) => {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     username: "",
     password: ""
@@ -26,12 +26,11 @@ export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const user = await authService.login(credentials);
+      await onLogin(credentials);
       toast({
         title: "Đăng nhập thành công",
-        description: `Chào mừng ${user.name}!`,
+        description: "Chào mừng bạn!",
       });
-      onLogin(user.role);
     } catch (error) {
       toast({
         title: "Lỗi đăng nhập",
@@ -74,10 +73,10 @@ export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
           <Logo size="lg" className="justify-center" />
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              {userType === 'agent' ? 'Đăng nhập Agent' : 'Đăng nhập ConnectSure'}
+              {initialUserType === 'agent' ? 'Đăng nhập Agent' : 'Đăng nhập ConnectSure'}
             </CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
-              {userType === 'agent' 
+              {initialUserType === 'agent' 
                 ? 'Truy cập hệ thống tư vấn viên' 
                 : 'Chào mừng bạn quay trở lại'
               }
@@ -89,12 +88,12 @@ export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">
-                {userType === 'agent' ? 'Tên đăng nhập' : 'Số điện thoại hoặc Email'}
+                {initialUserType === 'agent' ? 'Tên đăng nhập' : 'Số điện thoại hoặc Email'}
               </Label>
               <Input
                 id="username"
                 type="text"
-                placeholder={userType === 'agent' ? 'admin' : 'Nhập email hoặc số điện thoại'}
+                placeholder={initialUserType === 'agent' ? 'admin' : 'Nhập email hoặc số điện thoại'}
                 value={credentials.username}
                 onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
                 required
@@ -107,7 +106,7 @@ export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
               <Input
                 id="password"
                 type="password"
-                placeholder={userType === 'agent' ? 'admin' : 'Nhập mật khẩu'}
+                placeholder={initialUserType === 'agent' ? 'admin' : 'Nhập mật khẩu'}
                 value={credentials.password}
                 onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
                 required
@@ -136,7 +135,7 @@ export const LoginForm = ({ onLogin, userType }: LoginFormProps) => {
             </Button>
           </form>
           
-          {userType === 'customer' && (
+          {initialUserType === 'customer' && (
             <div className="mt-6 text-center text-xs text-muted-foreground">
               Bằng việc đăng nhập, bạn đồng ý với{" "}
               <a href="#" className="text-primary hover:underline">Điều khoản sử dụng</a>

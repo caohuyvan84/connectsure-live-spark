@@ -33,9 +33,14 @@ export const ConnectSureApp = () => {
     }
   }, [location]);
 
-  const handleLogin = (role: 'customer' | 'agent') => {
-    setUserType(role);
-    setAppState('dashboard');
+  const handleLogin = async (credentials: any) => {
+    try {
+      const user = await authService.login(credentials);
+      setUserType(user.role);
+      setAppState('dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -57,7 +62,7 @@ export const ConnectSureApp = () => {
     return (
       <LoginForm 
         onLogin={handleLogin} 
-        userType={userType || 'customer'} 
+        initialUserType={userType || 'customer'} 
       />
     );
   }
