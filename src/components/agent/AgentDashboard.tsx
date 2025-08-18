@@ -7,6 +7,10 @@ import { Logo } from "@/components/layout/Logo";
 import { videoCallService } from "@/services/videoCallService";
 import { chatService } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
+import { ImageViewerModal } from "./modals/ImageViewerModal";
+import { VideoPlaybackModal } from "./modals/VideoPlaybackModal";
+import { AddParticipantModal } from "./modals/AddParticipantModal";
+import { TransferCallModal } from "./modals/TransferCallModal";
 import {
   Phone,
   PhoneOff,
@@ -24,7 +28,13 @@ import {
   Eye,
   EyeOff,
   MessageCircle,
-  History
+  History,
+  Send,
+  Pause,
+  Play,
+  PhoneForwarded,
+  TicketIcon,
+  FileSignature
 } from "lucide-react";
 
 interface AgentDashboardProps {
@@ -36,7 +46,12 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
   const [chatMessages, setChatMessages] = useState(chatService.getMessages());
   const [newMessage, setNewMessage] = useState("");
   const [showAgentVideo, setShowAgentVideo] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [showVideoPlayback, setShowVideoPlayback] = useState(false);
+  const [selectedCallRecord, setSelectedCallRecord] = useState<any>(null);
+  const [showAddParticipant, setShowAddParticipant] = useState(false);
+  const [showTransferCall, setShowTransferCall] = useState(false);
+  const [agentVideoPosition, setAgentVideoPosition] = useState({ x: 16, y: 16 });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -93,21 +108,68 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
     }
   };
 
-  const quickReplies = chatService.getQuickReplies();
+  
 
+  // Enhanced customer data matching prototype specs
   const customerData = {
     name: "Nguyễn Văn An",
-    phone: "0123456789",
+    phone: "0901 234 567",
     email: "nguyenvanan@email.com",
-    customerCode: "CS001234",
+    customerCode: "NA",
     joinDate: "15/08/2024",
-    lastContact: "14/08/2025"
+    lastContact: "14/08/2025",
+    currentRequest: "eKYC Hợp đồng An Tâm Trọn Vẹn (#HD-8654)",
+    dateOfBirth: "01/01/1990",
+    address: "123 Đường ABC, Quận 1, TP.HCM",
+    policy: "An Tâm Trọn Vẹn",
+    policyStartDate: "01/01/2025",
+    premium: "10,000,000 VND/năm"
   };
 
   const capturedImages = [
-    { id: 1, type: "CCCD Mặt trước", url: "/placeholder-id-front.jpg", timestamp: "15:05:23" },
-    { id: 2, type: "CCCD Mặt sau", url: "/placeholder-id-back.jpg", timestamp: "15:05:45" },
+    { id: 1, type: "CCCD mặt trước", url: "/placeholder-id-front.jpg", timestamp: "15:05:23" },
+    { id: 2, type: "CCCD mặt sau", url: "/placeholder-id-back.jpg", timestamp: "15:05:45" },
     { id: 3, type: "Ảnh chân dung", url: "/placeholder-portrait.jpg", timestamp: "15:06:12" },
+  ];
+
+  // Enhanced history data matching prototype specs
+  const historyData = [
+    { 
+      type: "Video Call (eKYC)", 
+      date: "12/08/2025", 
+      duration: "10 phút 30 giây", 
+      status: "Hoàn thành",
+      hasRecording: true 
+    },
+    { 
+      type: "Video Call (Tư vấn sản phẩm)", 
+      date: "05/08/2025", 
+      duration: "25 phút 15 giây", 
+      status: "Hoàn thành",
+      hasRecording: true 
+    },
+    { 
+      type: "Trò chuyện hỗ trợ (Giải đáp thắc mắc)", 
+      date: "01/08/2025", 
+      status: "Hoàn thành",
+      hasRecording: false 
+    },
+  ];
+
+  // Enhanced tickets data
+  const ticketsData = [
+    {
+      id: "001",
+      title: "Yêu cầu bồi thường",
+      status: "Đang xử lý",
+      date: "12/08/2025"
+    },
+    {
+      id: "002", 
+      title: "Thay đổi thông tin cá nhân",
+      status: "Đã hoàn thành",
+      date: "10/08/2025"
+    }
   ];
 
   const ekycSteps = [
@@ -118,17 +180,27 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
     { id: 5, title: "Hoàn tất xác thực", completed: false },
   ];
 
+  const quickReplies = [
+    "Cảm ơn bạn đã cung cấp thông tin",
+    "Vui lòng đợi trong giây lát", 
+    "Bạn có thể lặp lại thông tin được không?"
+  ];
+
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-card-border shadow-sm">
-        <div className="flex justify-between items-center px-6 py-4">
-          <Logo size="md" />
+      {/* Header - Exact Assist Prototype Match */}
+      <header className="bg-primary border-b shadow-sm">
+        <div className="flex justify-between items-center px-6 py-3">
+          <Logo size="md" className="text-primary-foreground" />
           <div className="flex items-center gap-4">
-            <Badge variant="outline" className="text-success border-success">
+            <Badge className="bg-success text-success-foreground border-success">
               Đang hoạt động
             </Badge>
-            <Button variant="outline" onClick={onLogout}>
+            <Button 
+              variant="outline" 
+              onClick={onLogout}
+              className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+            >
               Đăng xuất
             </Button>
           </div>
@@ -137,72 +209,103 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Customer Information */}
-        <div className="w-80 border-r border-card-border bg-card">
+        {/* Left Panel - Customer Information - Exact Assist Prototype Match */}
+        <div className="w-80 border-r border-border bg-card">
           <div className="h-full flex flex-col">
-            <div className="p-4 border-b border-card-border">
-              <h2 className="font-semibold text-lg">Thông tin khách hàng</h2>
+            <div className="p-4 border-b border-border bg-primary">
+              <h2 className="font-semibold text-lg text-primary-foreground">Thông tin khách hàng</h2>
             </div>
             
             <div className="flex-1 overflow-y-auto">
               <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 m-4">
-                  <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
-                  <TabsTrigger value="history">Lịch sử</TabsTrigger>
-                  <TabsTrigger value="tickets">Tickets</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 m-4 bg-muted">
+                  <TabsTrigger value="profile" className="text-xs">Hồ sơ</TabsTrigger>
+                  <TabsTrigger value="history" className="text-xs">Lịch sử</TabsTrigger>
+                  <TabsTrigger value="tickets" className="text-xs">Tickets</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="profile" className="px-4 space-y-4">
-                  <Card>
+                  {/* Customer Profile Card */}
+                  <Card className="border-border">
                     <CardContent className="p-4 space-y-3">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <User className="h-8 w-8 text-primary" />
+                        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span className="text-primary-foreground font-bold text-lg">{customerData.customerCode}</span>
                         </div>
-                        <h3 className="font-semibold">{customerData.name}</h3>
-                        <p className="text-sm text-muted-foreground">{customerData.customerCode}</p>
+                        <h3 className="font-semibold text-base">{customerData.name}</h3>
+                        <p className="text-sm text-muted-foreground">{customerData.phone}</p>
                       </div>
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span>Điện thoại:</span>
-                          <span className="font-medium">{customerData.phone}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Email:</span>
+                          <span className="text-muted-foreground">Email:</span>
                           <span className="font-medium">{customerData.email}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Ngày tham gia:</span>
+                          <span className="text-muted-foreground">Ngày tham gia:</span>
                           <span className="font-medium">{customerData.joinDate}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Liên hệ cuối:</span>
+                          <span className="text-muted-foreground">Liên hệ cuối:</span>
                           <span className="font-medium">{customerData.lastContact}</span>
                         </div>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Yêu cầu hiện tại:</p>
+                        <p className="text-sm font-medium text-foreground">{customerData.currentRequest}</p>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Captured Images */}
-                  <Card>
-                    <CardHeader>
+                  {/* Customer Details */}
+                  <Card className="border-border">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Chi tiết khách hàng</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Ngày sinh:</span>
+                        <span className="font-medium">{customerData.dateOfBirth}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Địa chỉ:</span>
+                        <span className="font-medium text-right flex-1 ml-2">{customerData.address}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gói bảo hiểm:</span>
+                        <span className="font-medium">{customerData.policy}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Ngày bắt đầu:</span>
+                        <span className="font-medium">{customerData.policyStartDate}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phí bảo hiểm:</span>
+                        <span className="font-medium">{customerData.premium}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Captured Images - Enhanced */}
+                  <Card className="border-border">
+                    <CardHeader className="pb-2">
                       <CardTitle className="text-sm">Hình ảnh đã chụp</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4">
-                      <div className="grid grid-cols-2 gap-2">
-                        {capturedImages.map((image) => (
+                    <CardContent className="p-4 pt-0">
+                      <div className="grid grid-cols-3 gap-2">
+                        {capturedImages.map((image, index) => (
                           <div 
                             key={image.id}
-                            className="relative aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => setSelectedImage(image.url)}
+                            className="relative aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-border"
+                            onClick={() => setSelectedImageIndex(index)}
                           >
                             <div className="w-full h-full flex items-center justify-center">
-                              <Camera className="h-8 w-8 text-muted-foreground" />
+                              <Camera className="h-6 w-6 text-muted-foreground" />
                             </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1">
-                              <p className="truncate">{image.type}</p>
-                              <p className="opacity-70">{image.timestamp}</p>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1">
+                              <p className="truncate text-[10px]">{image.type}</p>
+                              <p className="opacity-70 text-[9px]">{image.timestamp}</p>
                             </div>
                           </div>
                         ))}
@@ -213,25 +316,28 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                 
                 <TabsContent value="history" className="px-4">
                   <div className="space-y-3">
-                    {[
-                      { type: "Cuộc gọi", duration: "12:45", date: "14/08/2025", hasRecording: true },
-                      { type: "Chat", messages: 25, date: "10/08/2025", hasRecording: false },
-                      { type: "eKYC", status: "Hoàn thành", date: "10/08/2025", hasRecording: true },
-                    ].map((item, index) => (
-                      <Card key={index} className="hover:shadow-sm transition-shadow">
+                    {historyData.map((item, index) => (
+                      <Card key={index} className="hover:shadow-sm transition-shadow border-border">
                         <CardContent className="p-3">
                           <div className="flex justify-between items-start">
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium text-sm">{item.type}</p>
                               <p className="text-xs text-muted-foreground">{item.date}</p>
-                              {item.duration && <p className="text-xs">Thời lượng: {item.duration}</p>}
-                              {item.messages && <p className="text-xs">{item.messages} tin nhắn</p>}
-                              {item.status && <p className="text-xs">Trạng thái: {item.status}</p>}
+                              {item.duration && <p className="text-xs text-foreground">{item.duration}</p>}
+                              <p className="text-xs text-success">{item.status}</p>
                             </div>
                             {item.hasRecording && (
-                              <Button variant="outline" size="sm" className="text-xs">
-                                <Eye className="h-3 w-3 mr-1" />
-                                Xem
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs"
+                                onClick={() => {
+                                  setSelectedCallRecord(item);
+                                  setShowVideoPlayback(true);
+                                }}
+                              >
+                                <Play className="h-3 w-3 mr-1" />
+                                Nghe ghi âm
                               </Button>
                             )}
                           </div>
@@ -243,18 +349,24 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                 
                 <TabsContent value="tickets" className="px-4">
                   <div className="space-y-3">
-                    <Card>
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-sm">Lỗi eKYC</p>
-                            <p className="text-xs text-muted-foreground">Ticket #TK001</p>
-                            <p className="text-xs">Ngày tạo: 14/08/2025</p>
+                    {ticketsData.map((ticket) => (
+                      <Card key={ticket.id} className="border-border">
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm">Ticket #{ticket.id}: {ticket.title}</p>
+                              <p className="text-xs text-muted-foreground">Ngày tạo: {ticket.date}</p>
+                            </div>
+                            <Badge 
+                              variant={ticket.status === "Đã hoàn thành" ? "default" : "secondary"}
+                              className={ticket.status === "Đã hoàn thành" ? "bg-success text-success-foreground" : ""}
+                            >
+                              {ticket.status}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="text-xs">Đang xử lý</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -262,28 +374,44 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
           </div>
         </div>
 
-        {/* Center Panel - Video Call */}
+        {/* Center Panel - Main Video Call Interface */}
         <div className="flex-1 flex flex-col">
-          {/* Video Area */}
+          {/* Video Area with Call Duration */}
           <div className="flex-1 relative bg-gray-900">
-            {/* Customer Video */}
+            {/* Call Duration Display */}
+            <div className="absolute top-4 left-4 z-10">
+              <Badge className="bg-black/70 text-white border-white/20 text-sm">
+                Thời gian đàm thoại: {videoCallService.formatDuration(callState.duration)}
+              </Badge>
+            </div>
+
+            {/* Customer Video Feed */}
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center text-white">
-                <User size={64} className="mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Nguyễn Văn An</p>
-                <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
-                  {videoCallService.formatDuration(callState.duration)}
-                </Badge>
+                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-primary-foreground font-bold text-2xl">{customerData.customerCode}</span>
+                </div>
+                <p className="text-xl mb-2">{customerData.name}</p>
+                <p className="text-sm opacity-70">{customerData.phone}</p>
               </div>
             </div>
 
-            {/* Agent Video PiP */}
+            {/* Agent Video PiP - Draggable and Toggleable */}
             {showAgentVideo && (
-              <div className="absolute top-4 right-4 w-48 h-36 bg-gray-700 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
+              <div 
+                className="absolute w-48 h-36 bg-gray-700 rounded-lg overflow-hidden border-2 border-white/30 shadow-lg cursor-move"
+                style={{ 
+                  top: `${agentVideoPosition.y}px`, 
+                  right: `${agentVideoPosition.x}px` 
+                }}
+              >
                 <div className="w-full h-full flex items-center justify-center text-white">
                   <div className="text-center">
-                    <User size={32} className="mx-auto mb-2" />
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-primary-foreground font-semibold text-sm">LM</span>
+                    </div>
                     <p className="text-sm">Lê Thị Minh</p>
+                    <p className="text-xs opacity-70">Tư vấn viên</p>
                   </div>
                 </div>
                 <Button
@@ -310,14 +438,15 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
             )}
           </div>
 
-          {/* Call Controls */}
-          <div className="bg-card border-t border-card-border p-4">
+          {/* Enhanced Call Controls */}
+          <div className="bg-card border-t border-border p-4">
             <div className="flex items-center justify-center gap-3">
               <Button
                 variant={callState.isAudioMuted ? "destructive" : "secondary"}
                 size="icon"
                 onClick={handleToggleMic}
-                className="rounded-full"
+                className="rounded-full w-12 h-12"
+                title={callState.isAudioMuted ? "Bật mic" : "Tắt mic"}
               >
                 {callState.isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
               </Button>
@@ -326,48 +455,64 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                 variant={callState.isVideoOff ? "destructive" : "secondary"}
                 size="icon"
                 onClick={handleToggleCamera}
-                className="rounded-full"
+                className="rounded-full w-12 h-12"
+                title={callState.isVideoOff ? "Bật camera" : "Tắt camera"}
               >
                 {callState.isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
               </Button>
 
               <Button
-                variant={callState.isOnHold ? "warning" : "secondary"}
+                variant={callState.isOnHold ? "default" : "secondary"}
                 size="icon"
                 onClick={handleToggleHold}
-                className="rounded-full"
+                className={`rounded-full w-12 h-12 ${callState.isOnHold ? 'bg-warning text-warning-foreground hover:bg-warning/90' : ''}`}
+                title={callState.isOnHold ? "Tiếp tục cuộc gọi" : "Tạm dừng cuộc gọi"}
               >
-                <Clock size={20} />
+                {callState.isOnHold ? <Play size={20} /> : <Pause size={20} />}
               </Button>
 
-              <Button variant="secondary" size="icon" className="rounded-full">
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                className="rounded-full w-12 h-12"
+                onClick={() => setShowAddParticipant(true)}
+                title="Thêm người tham gia"
+              >
                 <UserPlus size={20} />
               </Button>
 
-              <Button variant="secondary" size="icon" className="rounded-full">
-                <Users size={20} />
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                className="rounded-full w-12 h-12"
+                onClick={() => setShowTransferCall(true)}
+                title="Chuyển cuộc gọi"
+              >
+                <PhoneForwarded size={20} />
               </Button>
 
               <Button
-                variant="callEnd"
+                variant="destructive"
                 size="icon"
                 onClick={handleEndCall}
-                className="rounded-full"
+                className="rounded-full w-12 h-12"
+                title="Kết thúc cuộc gọi"
               >
                 <PhoneOff size={20} />
               </Button>
             </div>
           </div>
 
-          {/* Chat Area */}
-          <div className="h-64 border-t border-card-border bg-card">
+          {/* Enhanced Chat Interface */}
+          <div className="h-64 border-t border-border bg-card">
             <div className="h-full flex flex-col">
-              <div className="flex items-center justify-between p-3 border-b border-card-border">
+              <div className="flex items-center justify-between p-3 border-b border-border">
                 <h3 className="font-semibold text-sm">Tin nhắn</h3>
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
               </div>
               
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {/* Auto-scrolling chat messages */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2" id="chat-messages">
                 {chatMessages.map((message) => (
                   <div
                     key={message.id}
@@ -377,7 +522,7 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                       className={`max-w-[70%] rounded-lg p-2 text-sm ${
                         message.senderId.startsWith('agent')
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          : 'bg-muted border border-border'
                       }`}
                     >
                       <p>{message.text}</p>
@@ -392,14 +537,14 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                 ))}
               </div>
 
-              {/* Quick Replies */}
-              <div className="flex gap-1 p-2 border-t border-card-border overflow-x-auto">
-                {quickReplies.slice(0, 3).map((reply, index) => (
+              {/* Enhanced Quick Replies */}
+              <div className="flex gap-1 p-2 border-t border-border overflow-x-auto">
+                {quickReplies.map((reply, index) => (
                   <Button
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="text-xs whitespace-nowrap"
+                    className="text-xs whitespace-nowrap hover:bg-primary hover:text-primary-foreground"
                     onClick={() => setNewMessage(reply)}
                   >
                     {reply}
@@ -407,17 +552,18 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                 ))}
               </div>
               
-              <div className="p-3 border-t border-card-border">
+              <div className="p-3 border-t border-border">
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Nhập tin nhắn..."
-                    className="flex-1 px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="flex-1 px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background"
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   />
-                  <Button variant="brand" size="sm" onClick={sendMessage}>
+                  <Button className="bg-success text-success-foreground hover:bg-success/90" size="sm" onClick={sendMessage}>
+                    <Send className="h-4 w-4 mr-1" />
                     Gửi
                   </Button>
                 </div>
@@ -426,33 +572,35 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
           </div>
         </div>
 
-        {/* Right Panel - eKYC & Scripts */}
-        <div className="w-80 border-l border-card-border bg-card">
+        {/* Right Panel - eKYC Tools & Workflow - Exact Assist Prototype Match */}
+        <div className="w-80 border-l border-border bg-card">
           <div className="h-full flex flex-col">
-            <div className="p-4 border-b border-card-border">
-              <h2 className="font-semibold text-lg">eKYC & Hỗ trợ</h2>
+            <div className="p-4 border-b border-border bg-primary">
+              <h2 className="font-semibold text-lg text-primary-foreground">eKYC & Hỗ trợ</h2>
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* eKYC Workflow */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Quy trình eKYC</CardTitle>
+              {/* eKYC Checklist */}
+              <Card className="border-border">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Quy trình eKYC Checklist</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-4 pt-0 space-y-3">
                   {ekycSteps.map((step) => (
                     <div key={step.id} className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        step.completed ? 'bg-success text-success-foreground' : 'bg-muted'
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                        step.completed 
+                          ? 'bg-success text-success-foreground' 
+                          : 'bg-muted text-muted-foreground border border-border'
                       }`}>
-                        {step.completed ? (
-                          <CheckCircle size={14} />
-                        ) : (
-                          <span className="text-xs">{step.id}</span>
-                        )}
+                        {step.completed ? '✓' : step.id}
                       </div>
                       <div className="flex-1">
-                        <p className={`text-sm ${step.completed ? 'line-through text-muted-foreground' : ''}`}>
+                        <p className={`text-sm ${
+                          step.completed 
+                            ? 'line-through text-muted-foreground' 
+                            : 'text-foreground'
+                        }`}>
                           {step.title}
                         </p>
                       </div>
@@ -460,37 +608,57 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
                   ))}
                   
                   <div className="pt-3 space-y-2">
-                    <Button variant="brand" size="sm" className="w-full">
-                      <Camera className="h-4 w-4 mr-1" />
+                    <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" size="sm">
+                      <Camera className="h-4 w-4 mr-2" />
                       Bắt đầu chụp
                     </Button>
-                    <Button variant="success" size="sm" className="w-full">
-                      <CheckCircle className="h-4 w-4 mr-1" />
+                    <Button className="w-full bg-success text-success-foreground hover:bg-success/90" size="sm">
+                      <FileSignature className="h-4 w-4 mr-2" />
                       Hoàn tất & Ký hợp đồng
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Support Script */}
-              <Card>
-                <CardHeader>
+              {/* Enhanced Support Script */}
+              <Card className="border-border">
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Kịch bản hỗ trợ</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="text-sm space-y-2 text-muted-foreground">
-                    <p className="font-medium text-foreground">Bước 1: Chào hỏi</p>
-                    <p>"Xin chào anh/chị! Tôi là [Tên], tư vấn viên của ConnectSure. Hôm nay tôi sẽ hỗ trợ anh/chị hoàn thành quy trình eKYC."</p>
+                <CardContent className="p-4 pt-0">
+                  <div className="text-sm space-y-3 max-h-64 overflow-y-auto">
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="font-medium text-primary mb-1">🔹 Bước 1: Chào hỏi</p>
+                      <p className="text-xs text-muted-foreground">"Xin chào anh/chị! Tôi là Lê Thị Minh, tư vấn viên của ConnectSure. Hôm nay tôi sẽ hỗ trợ anh/chị hoàn thành quy trình eKYC."</p>
+                    </div>
                     
-                    <p className="font-medium text-foreground pt-2">Bước 2: Hướng dẫn eKYC</p>
-                    <p>"Chúng ta sẽ thực hiện 3 bước: chụp CCCD mặt trước, mặt sau, và kiểm tra sinh trắc học. Anh/chị đã chuẩn bị CCCD chưa?"</p>
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="font-medium text-primary mb-1">🔹 Bước 2: Hướng dẫn eKYC</p>
+                      <p className="text-xs text-muted-foreground">"Chúng ta sẽ thực hiện 3 bước: chụp CCCD mặt trước, mặt sau, và kiểm tra sinh trắc học. Anh/chị đã chuẩn bị CCCD chưa?"</p>
+                    </div>
                     
-                    <p className="font-medium text-foreground pt-2">Bước 3: Hoàn tất</p>
-                    <p>"Tuyệt vời! Anh/chị đã hoàn thành xác thực. Bây giờ chúng ta tiến hành ký hợp đồng điện tử."</p>
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="font-medium text-primary mb-1">🔹 Bước 3: Chụp ảnh CCCD</p>
+                      <p className="text-xs text-muted-foreground">"Vui lòng giữ CCCD thật chắc, đảm bảo ánh sáng tốt và không bị lóa. Tôi sẽ hướng dẫn anh/chị từng bước."</p>
+                    </div>
+
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="font-medium text-primary mb-1">🔹 Bước 4: Sinh trắc học</p>
+                      <p className="text-xs text-muted-foreground">"Bây giờ chúng ta thực hiện kiểm tra khuôn mặt. Vui lòng nhìn thẳng vào camera và làm theo hướng dẫn."</p>
+                    </div>
+                    
+                    <div className="p-2 bg-muted rounded-md">
+                      <p className="font-medium text-primary mb-1">🔹 Bước 5: Hoàn tất</p>
+                      <p className="text-xs text-muted-foreground">"Tuyệt vời! Anh/chị đã hoàn thành xác thực. Bây giờ chúng ta tiến hành ký hợp đồng điện tử."</p>
+                    </div>
                   </div>
                   
-                  <Button variant="outline" size="sm" className="w-full mt-4">
-                    <FileText className="h-4 w-4 mr-1" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-4 border-warning text-warning hover:bg-warning hover:text-warning-foreground"
+                  >
+                    <TicketIcon className="h-4 w-4 mr-2" />
                     Tạo Ticket Hỗ trợ
                   </Button>
                 </CardContent>
@@ -500,24 +668,29 @@ export const AgentDashboard = ({ onLogout }: AgentDashboardProps) => {
         </div>
       </div>
 
-      {/* Image Viewer Modal */}
-      {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setSelectedImage(null)}>
-          <div className="max-w-2xl max-h-[80vh] bg-card rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-card-border">
-              <h3 className="font-semibold">Xem hình ảnh</h3>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedImage(null)}>
-                ✕
-              </Button>
-            </div>
-            <div className="p-4">
-              <div className="aspect-[4/3] bg-muted rounded-lg flex items-center justify-center">
-                <Camera className="h-16 w-16 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Enhanced Modals */}
+      <ImageViewerModal
+        isOpen={selectedImageIndex !== null}
+        onClose={() => setSelectedImageIndex(null)}
+        images={capturedImages}
+        initialIndex={selectedImageIndex || 0}
+      />
+
+      <VideoPlaybackModal
+        isOpen={showVideoPlayback}
+        onClose={() => setShowVideoPlayback(false)}
+        callRecord={selectedCallRecord}
+      />
+
+      <AddParticipantModal
+        isOpen={showAddParticipant}
+        onClose={() => setShowAddParticipant(false)}
+      />
+
+      <TransferCallModal
+        isOpen={showTransferCall}
+        onClose={() => setShowTransferCall(false)}
+      />
     </div>
   );
 };

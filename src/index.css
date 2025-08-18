@@ -10,20 +10,20 @@
     --background: 0 0% 100%;
     --foreground: 210 15% 20%;
     
-    /* ConnectSure Brand Colors */
-    --primary: 210 100% 20%; /* #003366 - Deep corporate blue */
-    --primary-foreground: 0 0% 98%;
-    --primary-light: 210 60% 40%;
+    /* ConnectSure Brand Colors - Exact Assist Prototype Match */
+    --primary: 210 100% 20%; /* #003366 - Deep Blue */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF - White */
+    --primary-light: 210 80% 30%;
     --primary-dark: 210 100% 15%;
     
     /* Success/Action Colors */
-    --success: 142 76% 36%; /* #28a745 - Trust green */
-    --success-foreground: 0 0% 98%;
-    --success-light: 142 60% 50%;
+    --success: 134 61% 41%; /* #28a745 - Gentle Green */
+    --success-foreground: 0 0% 100%;
+    --success-light: 134 50% 50%;
     
     /* Warning Colors */
-    --warning: 45 100% 51%; /* #ffc107 - Attention yellow */
-    --warning-foreground: 210 15% 20%;
+    --warning: 45 100% 51%; /* #ffc107 - Soft Amber */
+    --warning-foreground: 210 100% 20%;
     
     /* UI Colors */
     --card: 0 0% 100%;
